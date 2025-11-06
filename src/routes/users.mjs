@@ -4,6 +4,7 @@ import { users } from "../utils/constants.mjs";
 import { products } from "../utils/constants.mjs";
 import { validationResult, matchedData, checkSchema } from "express-validator";
 import { createUserValidationSchema } from "../utils/validationSchemas.mjs";
+import { User } from "../mongoose/user.mjs";
 
 const router = Router();
 
@@ -21,7 +22,7 @@ router.get("/api/users", (req, res) => {
     }
     return res.send(users);
   } else {
-   return res.send("You are not an admin/You don't have the right cookie");
+    return res.send("You are not an admin/You don't have the right cookie");
   }
 });
 
@@ -51,15 +52,20 @@ router.put("/api/users/:id", getUserIndexById, (req, res) => {
 router.post(
   "/api/users",
   checkSchema(createUserValidationSchema),
-  (req, res) => {
+  async (req, res) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
       return res.status(400).send({ error: result.array() });
     }
     const body = matchedData(req);
-    const newUser = { id: users[users.length - 1].id + 1, ...body };
-    users.push(newUser);
-    return res.status(201).send(newUser);
+    const newUser = new User(body);
+    try {
+      const savedUser = await newUser.save();
+      return res.status(201).send(savedUser);
+    } catch (error) {
+      console.log(error);
+      return res.status(400).send({ msg: "User not saved" });
+    }
   }
 );
 
