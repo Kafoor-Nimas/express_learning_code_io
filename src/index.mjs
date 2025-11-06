@@ -5,10 +5,17 @@ import session from "express-session";
 import { Strategy as LocalStrategy } from "passport-local";
 import passport from "passport";
 import { users } from "./utils/constants.mjs";
+import mongoose from "mongoose";
 
 const app = express();
 app.use(express.json());
 app.use(cookieParser("secret"));
+
+mongoose
+  .connect("mongodb://localhost/express")
+  .then(() => console.log("DB Connected"))
+  .catch((err) => console.log(`Error : ${err}`));
+
 app.use(
   session({
     secret: "romba secret",
